@@ -14,25 +14,54 @@ struct ContentView: View {
     
     var body: some View {
         VStack {
-            HStack{
-                TextField("Your name", text: $viewModel.name)
-                    .textFieldStyle(.roundedBorder)
-                    
-                Text(viewModel.validation)
+            Spacer()
+            Text(viewModel.data)
+                .font(.title)
+                .foregroundColor(.green)
+            Text(viewModel.status)
+                .foregroundColor(.blue)
+            Spacer()
+            
+            Button("Cancel") {
+                viewModel.cancel()
             }
-            .padding()
+            .foregroundColor(.pink)
+            .opacity(viewModel.status == "Bank request" ? 1.0 : 0.0)
+            
+            Button("Re-request") {
+                viewModel.refresh()
+            }
         }
     }
 }
 
 class FirstPipelineViewModel: ObservableObject {
-    @Published var name = ""
-    @Published var validation = ""
+    
+    @Published var data = ""
+    @Published var status = ""
+    
+    private var cancellable: AnyCancellable?
     
     init() {
-        $name
-            .map {$0.isEmpty ? "💔": "❤️‍🔥"}
-            .assign(to: &$validation)
+        cancellable = $data
+            .map {[unowned self] value -> String in
+                self.status = "Bank request"
+                return value
+            }
+            .delay(for: 5, scheduler: DispatchQueue.main)
+            .sink(receiveValue: { [unowned self] value in
+                self.data = "The sum of all accounts is 1 000 000"
+                self.status = "Data recived"
+            })
+    }
+    
+    func refresh() {
+        status = "Re-request data"
+    }
+    func cancel() {
+        status = "Operation cancelled"
+        cancellable?.cancel()
+        cancellable = nil
     }
 }
 
