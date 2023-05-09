@@ -6,19 +6,37 @@
 //
 
 import SwiftUI
+import Combine
 
 struct ContentView: View {
+    
+    @StateObject var viewModel = FirstPipelineViewModel()
+    
     var body: some View {
         VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundColor(.accentColor)
-            Text("Hello, world!")
+            HStack{
+                TextField("Your name", text: $viewModel.name)
+                    .textFieldStyle(.roundedBorder)
+                    
+                Text(viewModel.validation)
+            }
+            .padding()
         }
-        .padding()
     }
 }
 
+class FirstPipelineViewModel: ObservableObject {
+    @Published var name = ""
+    @Published var validation = ""
+    
+    init() {
+        $name
+            .map {$0.isEmpty ? "💔": "❤️‍🔥"}
+            .assign(to: &$validation)
+    }
+}
+
+ 
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
         ContentView()
